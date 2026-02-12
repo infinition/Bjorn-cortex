@@ -1,7 +1,17 @@
+<div align="center">
+  <img src="https://github.com/user-attachments/assets/2d2ed3e7-e159-42a5-9e99-22074c10581b"
+       alt="icon"
+       width="140"
+       height="125" />
+</div>
+
 # Bjorn Cortex
 Neural command center for Bjorn units.
 
 This service receives anonymized training data from clients, trains a model, and serves the latest model to connected Bjorn devices.
+
+
+<img width="896" height="965" alt="image" src="https://github.com/user-attachments/assets/b49609e8-dfcf-4bfe-986c-c681da06fbdd" />
 
 ## Features
 - FastAPI backend + dashboard.
