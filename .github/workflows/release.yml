@@ -1,0 +1,52 @@
+name: Cortex Version Backup
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  backup-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build backup notes
+        shell: bash
+        run: |
+          echo "Detecting previous tag..."
+          LAST_TAG="$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || true)"
+
+          if [ -z "$LAST_TAG" ]; then
+            echo "RELEASE_NOTES=Initial backup snapshot" >> "$GITHUB_ENV"
+          else
+            {
+              echo "RELEASE_NOTES<<EOF"
+              git log "$LAST_TAG"..HEAD --pretty=format:"- %h %s"
+              echo
+              echo "EOF"
+            } >> "$GITHUB_ENV"
+          fi
+
+      - name: Create GitHub Release (backup)
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "Backup ${{ github.ref_name }}"
+          generate_release_notes: true
+          body: |
+            Version backup for Bjorn Cortex.
+
+            This release is a restore point intended for rollback/comparison.
+
+            Changes since previous tag:
+            ${{ env.RELEASE_NOTES }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
