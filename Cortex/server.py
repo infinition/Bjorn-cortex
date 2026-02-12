@@ -10,6 +10,7 @@ import asyncio
 import json
 import hashlib
 import secrets
+from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import List, Dict, Optional, Tuple
 from datetime import datetime, timedelta
@@ -93,7 +94,24 @@ SEC_CONFIG = load_security_config()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token", auto_error=False)
 limiter = Limiter(key_func=get_remote_address)
 
-app = FastAPI(title="Bjorn Cortex")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    if ensure_totp_secret_valid(SEC_CONFIG):
+        save_security_config()
+
+    scheduler_task = asyncio.create_task(scheduler_loop())
+    app.state.scheduler_task = scheduler_task
+    try:
+        yield
+    finally:
+        scheduler_task.cancel()
+        try:
+            await scheduler_task
+        except asyncio.CancelledError:
+            pass
+
+
+app = FastAPI(title="Bjorn Cortex", lifespan=lifespan)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
@@ -645,8 +663,3 @@ async def scheduler_loop():
             print(f"Scheduler Error: {e}")
             await asyncio.sleep(60)
 
-@app.on_event("startup")
-async def startup_event():
-    if ensure_totp_secret_valid(SEC_CONFIG):
-        save_security_config()
-    asyncio.create_task(scheduler_loop())
