@@ -1,0 +1,4 @@
+Contact: https://github.com/infinition/Bjorn-cortex/issues
+Expires: 2027-02-12T21:55:03.000Z
+Preferred-Languages: en, fr
+Policy: https://github.com/infinition/Bjorn-cortex/blob/wiki/SECURITY.md
