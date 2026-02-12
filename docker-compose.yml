@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  bjorn-cortex:
+    build: .
+    container_name: bjorn-cortex
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./models:/app/models
+      - ./security_config.json:/app/security_config.json
+      - ./server_config.json:/app/server_config.json
+      - ./training_history.json:/app/training_history.json
+    environment:
+      - TZ=Europe/Paris # Adjust as needed
+    networks:
+      - cortex-net
+
+networks:
+  cortex-net:
+    driver: bridge
+
+# Note: For production with SSL, use NGINX Proxy Manager or a reverse proxy.

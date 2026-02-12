@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bjorn Cortex | Secure Access</title>
+    <link rel="icon" type="image/png" href="/static/icons/icon.png">
+    <!-- Mobile & iOS Optimization -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#030303">
+    <link rel="apple-touch-icon" href="/static/icons/icon.png">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700&family=Fira+Code&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #030303;
+            --accent-color: #00ff9d;
+            --accent-glow: rgba(0, 255, 157, 0.4);
+            --error-color: #ff3e3e;
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --btn-grad: linear-gradient(135deg, #00ff9d 0%, #00bcff 100%);
+        }
+
+        body {
+            background-color: var(--bg-color);
+            background-image: radial-gradient(circle at 50% 10%, rgba(0, 255, 157, 0.05) 0%, transparent 40%),
+                linear-gradient(rgba(20, 20, 20, 0.4) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(20, 20, 20, 0.4) 1px, transparent 1px);
+            background-size: 100% 100%, 50px 50px, 50px 50px;
+            color: #fff;
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .login-card {
+            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9);
+            animation: slideUp 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        .logo {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .logo img {
+            height: 60px;
+            filter: drop-shadow(0 0 15px var(--accent-glow));
+        }
+
+        .logo h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 800;
+            background: linear-gradient(90deg, #fff, var(--accent-color));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 10px;
+            color: var(--accent-color);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            padding: 12px 15px;
+            color: #fff;
+            font-family: 'Fira Code', monospace;
+            font-size: 14px;
+            transition: 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            background: rgba(0, 255, 157, 0.05);
+        }
+
+        #mfa-group {
+            display: none;
+            animation: fadeIn 0.4s;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            border-radius: 8px;
+            border: none;
+            background: var(--btn-grad);
+            color: #000;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 255, 157, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .error-msg {
+            color: var(--error-color);
+            font-size: 12px;
+            text-align: center;
+            margin-top: 15px;
+            display: none;
+            font-weight: 600;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="login-card">
+        <div class="logo">
+            <img src="/static/icons/icon.png"
+                onerror="this.src='https://cdn-icons-png.flaticon.com/512/2103/2103632.png'">
+            <h1>Bjorn_Cortex</h1>
+        </div>
+
+        <form id="login-form">
+            <div class="input-group">
+                <label>Access Key (Password)</label>
+                <input type="password" id="password" required placeholder="••••••••">
+            </div>
+
+            <div id="mfa-group" class="input-group">
+                <label>MFA Token (TOTP)</label>
+                <input type="text" id="mfa-code" maxlength="6" pattern="[0-9]*" placeholder="000000">
+                <p style="font-size: 9px; color: #666; margin-top: 5px; font-style: italic;">Enter the 6-digit code from
+                    your authenticator app.</p>
+            </div>
+
+            <button type="submit" id="btn-submit">Initialize Link</button>
+            <div id="error-box" class="error-msg"></div>
+        </form>
+    </div>
+
+    <script>
+        const form = document.getElementById('login-form');
+        const mfaGroup = document.getElementById('mfa-group');
+        const passInput = document.getElementById('password');
+        const mfaInput = document.getElementById('mfa-code');
+        const btn = document.getElementById('btn-submit');
+        const errorBox = document.getElementById('error-box');
+
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            errorBox.style.display = 'none';
+            btn.innerText = 'VERIFYING...';
+
+            const formData = new FormData();
+            formData.append('username', 'admin'); // Default user
+            formData.append('password', passInput.value);
+
+            const headers = {};
+            if (mfaGroup.style.display === 'block') {
+                headers['X-TOTP-Code'] = mfaInput.value;
+            }
+
+            try {
+                const res = await fetch('/token', {
+                    method: 'POST',
+                    body: formData,
+                    headers: headers
+                });
+
+                if (res.status === 202) {
+                    // MFA Required
+                    mfaGroup.style.display = 'block';
+                    mfaInput.required = true;
+                    mfaInput.focus();
+                    btn.innerText = 'CONFIRM MFA';
+                } else if (res.ok) {
+                    const data = await res.json();
+                    localStorage.setItem('access_token', data.access_token);
+                    window.location.href = '/';
+                } else {
+                    const data = await res.json();
+                    throw new Error(data.detail || 'Access Denied');
+                }
+            } catch (err) {
+                errorBox.innerText = err.message;
+                errorBox.style.display = 'block';
+                btn.innerText = 'INITIALIZE LINK';
+            }
+        };
+    </script>
+</body>
+
+</html>

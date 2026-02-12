@@ -1,0 +1,10 @@
+{
+  "auto_train": true,
+  "training_interval_minutes": 60,
+  "use_tf_dataset": true,
+  "default_training_epochs": 50,
+  "training_batch_size": 32,
+  "training_learning_rate": 0.001,
+  "allow_device_api_without_auth": false,
+  "device_api_key": "CHANGE_ME_DEVICE_API_KEY"
+}

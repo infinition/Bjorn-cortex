@@ -1,0 +1,1463 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bjorn Cortex</title>
+    <link rel="icon" type="image/png" href="/static/icons/icon.png">
+
+    <!-- Mobile & iOS Optimization -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#030303">
+    <link rel="apple-touch-icon" href="/static/icons/icon.png">
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1"></script>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Fira+Code:wght@400;500&display=swap"
+        rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-color: #030303;
+            --panel-color: rgba(10, 10, 10, 0.95);
+            --accent-color: #00ff9d;
+            --accent-glow: rgba(0, 255, 157, 0.4);
+            --text-color: #f0f0f0;
+            --text-dim: #666;
+            --error-color: #ff3e3e;
+            --warning-color: #ffbb00;
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --card-shadow: 0 10px 40px rgba(0, 0, 0, 0.9);
+            --btn-grad: linear-gradient(135deg, #00ff9d 0%, #00bcff 100%);
+        }
+
+        * {
+            box-sizing: border-box;
+            scrollbar-width: thin;
+            scrollbar-color: var(--accent-color) #000;
+        }
+
+        ::-webkit-scrollbar {
+            width: 3px;
+            height: 3px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #000;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-color);
+        }
+
+        body {
+            background-color: var(--bg-color);
+            background-image: radial-gradient(circle at 50% 10%, rgba(0, 255, 157, 0.05) 0%, transparent 40%),
+                linear-gradient(rgba(20, 20, 20, 0.4) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(20, 20, 20, 0.4) 1px, transparent 1px);
+            background-size: 100% 100%, 50px 50px, 50px 50px;
+            color: var(--text-color);
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            height: 100vh;
+            height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: fixed;
+            width: 100%;
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        /* Header */
+        .app-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 20px;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(15px);
+            border-bottom: 1px solid var(--glass-border);
+            z-index: 1000;
+            flex-shrink: 0;
+        }
+
+        .logo-box {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-box h1 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 800;
+            background: linear-gradient(90deg, #fff, var(--accent-color));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .logo-box img {
+            height: 26px;
+            filter: drop-shadow(0 0 8px var(--accent-glow));
+            transition: transform 0.3s;
+        }
+
+        #connection-status {
+            font-size: 9px;
+            font-weight: 900;
+            color: var(--error-color);
+            padding: 3px 10px;
+            border-radius: 15px;
+            background: rgba(255, 62, 62, 0.1);
+            border: 1px solid rgba(255, 62, 62, 0.2);
+            letter-spacing: 1px;
+            transition: all 0.3s;
+            text-transform: uppercase;
+        }
+
+        #connection-status.online {
+            color: var(--accent-color);
+            background: rgba(0, 255, 157, 0.1);
+            border-color: rgba(0, 255, 157, 0.2);
+            box-shadow: 0 0 10px rgba(0, 255, 157, 0.1);
+        }
+
+        /* Toolbar */
+        .toolbar {
+            display: flex;
+            gap: 12px;
+            padding: 8px 15px;
+            background: rgba(10, 10, 10, 0.5);
+            border-bottom: 1px solid var(--glass-border);
+            align-items: center;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            flex-shrink: 0;
+        }
+
+        .tool-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 4px 10px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 8px;
+            border: 1px solid var(--glass-border);
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .mini-stat {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+            border-left: 1px solid rgba(255, 255, 255, 0.05);
+            padding-left: 10px;
+        }
+
+        .mini-stat:first-child {
+            border-left: none;
+            padding-left: 0;
+        }
+
+        .mini-stat .label {
+            font-size: 7.5px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 700;
+        }
+
+        .mini-stat .value {
+            font-size: 12px;
+            font-weight: 600;
+            font-family: 'Fira Code', monospace;
+        }
+
+        .mini-stat .value.highlight {
+            color: var(--accent-color);
+            text-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        .bjorn-sources {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: #b8fff0;
+            height: 100%;
+        }
+
+        .bjorn-sources img {
+            height: 100%;
+            max-height: 28px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        .mini-stat.bjorn-unit-stat {
+            justify-content: center;
+            min-height: 28px;
+        }
+
+        /* Buttons */
+        button {
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: 1px solid var(--glass-border);
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            font-weight: 700;
+            font-size: 10px;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        button.primary {
+            background: var(--btn-grad);
+            color: #000;
+            border: none;
+        }
+
+        .icon-btn {
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            justify-content: center;
+        }
+
+        /* Switch */
+        .switch-control {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 30px;
+            height: 16px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #222;
+            transition: .3s;
+            border-radius: 34px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 10px;
+            width: 10px;
+            left: 2px;
+            bottom: 2px;
+            background-color: #888;
+            transition: .3s;
+            border-radius: 50%;
+        }
+
+        input:checked+.toggle-slider {
+            background-color: rgba(0, 255, 157, 0.2);
+            border-color: var(--accent-color);
+        }
+
+        input:checked+.toggle-slider:before {
+            transform: translateX(14px);
+            background-color: var(--accent-color);
+        }
+
+        /* Panels */
+        .app-body {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding: 12px;
+            flex-grow: 1;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        .panel {
+            background: var(--panel-color);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+        }
+
+        .panel-graph {
+            flex: 1.4;
+            min-height: 0;
+        }
+
+        .panel-terminal {
+            flex: 1;
+            min-height: 0;
+        }
+
+        .panel-header {
+            padding: 8px 15px;
+            background: rgba(255, 255, 255, 0.03);
+            border-bottom: 1px solid var(--glass-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .panel-header h3 {
+            margin: 0;
+            font-size: 10px;
+            letter-spacing: 2px;
+            color: var(--accent-color);
+            text-transform: uppercase;
+            font-weight: 800;
+        }
+
+        /* Chart */
+        .chart-area {
+            flex-grow: 1;
+            padding: 10px;
+            position: relative;
+            width: 100%;
+            min-height: 0;
+        }
+
+        .graph-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .mini-btn {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            color: #888;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        /* Terminal Improvements */
+        .terminal-box {
+            flex-grow: 1;
+            padding: 12px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            /* No horizontal scroll */
+            font-family: 'Fira Code', monospace;
+            font-size: 10px;
+            line-height: 1.5;
+            color: #bbb;
+        }
+
+        .log-line {
+            margin-bottom: 3px;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+            white-space: pre-wrap;
+            /* Wrap long lines */
+            word-break: break-all;
+        }
+
+        .log-ts {
+            color: #8ea4b8;
+            min-width: 86px;
+            font-size: 10px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .log-msg {
+            flex-grow: 1;
+            color: #cdd6dd;
+        }
+
+        .log-info .log-msg {
+            color: #b8c7d3;
+        }
+
+        .log-success .log-msg {
+            color: #5df7b2;
+        }
+
+        .log-warning .log-msg {
+            color: #ffd064;
+        }
+
+        .log-error .log-msg {
+            color: #ff7d7d;
+        }
+
+        .log-num {
+            color: #00d8ff;
+            font-weight: 700;
+        }
+
+        /* Modal - RESTORED MISSING STYLES */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.2s;
+        }
+
+        .modal-content {
+            background: #111;
+            border: 1px solid var(--accent-color);
+            width: 95%;
+            max-width: 450px;
+            border-radius: 12px;
+            box-shadow: 0 0 50px rgba(0, 255, 157, 0.1);
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .close-modal {
+            color: #aaa;
+            float: right;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+        }
+
+        .close-modal:hover {
+            color: #fff;
+        }
+
+        .setting-row {
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 15px;
+        }
+
+        .setting-row label {
+            display: block;
+            font-size: 11px;
+            color: var(--accent-color);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .setting-desc {
+            font-size: 10px;
+            color: #666;
+            margin-top: 5px;
+            font-style: italic;
+        }
+
+        .range-wrap {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        input[type=range] {
+            flex-grow: 1;
+            height: 4px;
+            background: #333;
+            border-radius: 2px;
+            appearance: none;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            appearance: none;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--accent-color);
+            cursor: pointer;
+            box-shadow: 0 0 10px var(--accent-color);
+        }
+
+        .val-display {
+            font-family: 'Fira Code', monospace;
+            color: #fff;
+            min-width: 30px;
+            text-align: right;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 10px;
+        }
+
+        /* Dropdown - MISSING STYLES */
+        .dropdown {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .dropdown-menu {
+            position: fixed;
+            background: rgba(10, 10, 10, 0.95);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            padding: 5px;
+            z-index: 3000;
+            min-width: 250px;
+            max-width: calc(100vw - 16px);
+            display: none;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+            max-height: 250px;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .dropdown-menu.show {
+            display: block;
+            animation: fadeIn 0.1s ease-out;
+        }
+
+        .dropdown-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 10px;
+            color: #ccc;
+            transition: 0.2s;
+        }
+
+        .dropdown-item:last-child {
+            border-bottom: none;
+        }
+
+        .dropdown-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+        }
+
+        .btn-del {
+            color: var(--error-color);
+            cursor: pointer;
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 4px;
+            transition: 0.2s;
+        }
+
+        .btn-del:hover {
+            background: rgba(255, 62, 62, 0.2);
+        }
+
+        /* Toast - MISSING STYLES */
+        #toast-container {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 5000;
+        }
+
+        .toast {
+            background: rgba(0, 0, 0, 0.95);
+            border: 1px solid var(--accent-color);
+            padding: 8px 16px;
+            border-radius: 4px;
+            color: #fff;
+            font-size: 10px;
+            font-weight: 700;
+            animation: slideIn 0.3s forwards;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 0 30px rgba(0, 255, 157, 0.2);
+        }
+
+        .toast.error {
+            border-color: var(--error-color);
+        }
+
+        .toast.fade-out {
+            opacity: 0;
+            transition: opacity 0.4s;
+        }
+
+        #custom-tooltip {
+            position: absolute;
+            background: rgba(10, 10, 10, 0.95);
+            border: 1px solid var(--accent-color);
+            padding: 10px;
+            border-radius: 8px;
+            z-index: 1000;
+            display: none;
+            font-size: 10px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.8);
+            min-width: 140px;
+            pointer-events: none;
+        }
+
+        .tt-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+            margin-top: 4px;
+        }
+
+        .tt-label {
+            color: #666;
+            font-weight: 700;
+        }
+
+        .tt-val {
+            font-family: 'Fira Code', monospace;
+            font-weight: 600;
+        }
+
+        /* Mobile Adjustments */
+        @media (max-width: 900px) {
+            .toolbar {
+                flex-wrap: wrap;
+                justify-content: flex-start;
+            }
+
+            .tool-group {
+                flex-grow: 1;
+                justify-content: space-between;
+            }
+
+            .app-body {
+                gap: 8px;
+                padding: 8px;
+                padding-top: calc(8px + env(safe-area-inset-top));
+                padding-bottom: calc(18px + env(safe-area-inset-bottom));
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header class="app-header">
+        <div class="logo-box">
+            <img src="/static/icons/icon.png"
+                onerror="this.src='https://cdn-icons-png.flaticon.com/512/2103/2103632.png'" alt="Brain">
+            <h1>Bjorn Cortex</h1>
+        </div>
+        <div id="connection-status">OFS_DISCONNECTED</div>
+    </header>
+
+    <div class="toolbar">
+        <div class="tool-group">
+            <button id="btn-train" class="primary" onclick="startTraining()">TRAIN 🚀</button>
+            <div class="switch-control">
+                <span class="label">AUTO</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="check-auto-train" onchange="toggleAutoTrain()">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+            <button id="btn-settings" class="icon-btn" title="Server Settings" onclick="openSettingsModal()">⚙</button>
+            <button id="btn-refresh" class="icon-btn" title="Force Refresh Data" onclick="fetchStats()">⟳</button>
+        </div>
+
+        <div class="tool-group">
+            <div class="mini-stat bjorn-unit-stat">
+                <span id="bjorn-sources" class="value bjorn-sources">-</span>
+            </div>
+            <div class="mini-stat">
+                <span class="label">NEXT_TRAIN</span>
+                <span id="next-training-timer" class="value highlight">--:--:--</span>
+            </div>
+            <div class="mini-stat dropdown" onclick="toggleDataDropdown(event)">
+                <span class="label">DATA_RECORDS ▾</span>
+                <span id="stat-files" class="value">-</span>
+                <div id="data-dropdown" class="dropdown-menu"></div>
+            </div>
+            <div class="mini-stat">
+                <span class="label">TOTAL_SIZE</span>
+                <span id="stat-size" class="value">-</span>
+            </div>
+        </div>
+
+        <div class="tool-group">
+            <div class="mini-stat">
+                <span class="label">MODEL_VERSION</span>
+                <span id="model-version" class="value">-</span>
+            </div>
+            <div class="mini-stat">
+                <span class="label">STABILITY</span>
+                <span id="model-acc" class="value highlight">-</span>
+            </div>
+            <div class="mini-stat">
+                <span class="label">ENTROPY</span>
+                <span id="model-loss" class="value">-</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL (hidden by default) -->
+    <div id="settings-modal" class="modal">
+        <div class="modal-content panel">
+            <div class="panel-header">
+                <h3>CORE SETTINGS</h3>
+                <span class="close-modal" onclick="closeSettingsModal()">×</span>
+            </div>
+            <div class="modal-body">
+                <div class="setting-row">
+                    <label>Training Interval (Hours)</label>
+                    <div class="range-wrap">
+                        <input type="range" id="setting-interval" min="0" max="24" step="1"
+                            oninput="updateRangeVal(this, 'interval-val')">
+                        <span id="interval-val" class="val-display">6h</span>
+                    </div>
+                </div>
+                <div class="setting-row">
+                    <label>Smart Streaming (<code style="color:var(--accent-color)">tf.data</code>)</label>
+                    <div class="switch-control">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="setting-tf-data">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <p class="setting-desc">Use disk streaming instead of RAM. Swarm mode (>10k files).</p>
+                </div>
+                <div class="setting-row">
+                    <label>Training Epochs</label>
+                    <div class="range-wrap">
+                        <input type="number" id="setting-epochs" min="1" max="500" step="1" value="50">
+                    </div>
+                </div>
+                <div class="setting-row">
+                    <label>Batch Size</label>
+                    <div class="range-wrap">
+                        <input type="number" id="setting-batch-size" min="1" max="1024" step="1" value="32">
+                    </div>
+                </div>
+                <div class="setting-row">
+                    <label>Learning Rate</label>
+                    <div class="range-wrap">
+                        <input type="number" id="setting-learning-rate" min="0.000001" max="1" step="0.0001"
+                            value="0.001">
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button class="primary" onclick="saveSettings()">SAVE_CONFIGURATION</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="app-body">
+        <section class="panel panel-graph">
+            <div class="panel-header">
+                <h3 id="graph-title">Neural Cycles</h3>
+                <div style="display:flex; align-items:center; gap:15px;">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <span style="font-size:8px; color:var(--text-dim); font-weight:800">GHOSTS:</span>
+                        <input type="range" id="slider-history" min="0" max="10" value="0" step="1"
+                            oninput="updateHistoryDepth(this.value)" style="width:60px">
+                        <span id="history-val"
+                            style="color:var(--accent-color); font-weight:800; min-width:20px; font-size:9px;">OFF</span>
+                    </div>
+                    <div class="graph-actions">
+                        <div class="mini-btn" title="Reset View" onclick="chart.resetZoom()">⟲</div>
+                        <div class="mini-btn" title="Info" onclick="showToast('Zoom: Scroll | Pan: Ctrl+Drag')">ⓘ</div>
+                    </div>
+                </div>
+            </div>
+            <div class="chart-area">
+                <canvas id="trainingChart"></canvas>
+                <div id="custom-tooltip"></div>
+            </div>
+        </section>
+
+        <section class="panel panel-terminal">
+            <div class="panel-header">
+                <h3 id="terminal-title">LOG_STREAM</h3>
+                <span style="font-size:8px; color:#333; letter-spacing:1px">ACTIVE_BUF</span>
+            </div>
+            <div id="terminal" class="terminal-box"></div>
+        </section>
+    </div>
+
+    <div id="toast-container"></div>
+
+    <script>
+        // --- Globals ---
+        const ACCESS_TOKEN_KEY = 'access_token';
+
+        let chart;
+        let ws;
+        let pastSessions = [];
+        let historyDepth = 0;
+        let serverConfig = {};
+        let timerInterval;
+        const toolbarDeltaRef = { acc: null, loss: null };
+        let dataDropdownTrigger = null;
+
+        const terminal = document.getElementById('terminal');
+        const statusDiv = document.getElementById('connection-status');
+        const autoTrainCheck = document.getElementById('check-auto-train');
+        const settingsModal = document.getElementById('settings-modal');
+        const customTooltip = document.getElementById('custom-tooltip');
+
+        function getAccessToken() {
+            return localStorage.getItem(ACCESS_TOKEN_KEY);
+        }
+
+        // Inject Bearer token for same-origin API calls.
+        const nativeFetch = window.fetch.bind(window);
+        window.fetch = async (input, init = {}) => {
+            const url = (typeof input === 'string') ? input : (input?.url || '');
+            const isSameOrigin = url.startsWith('/') || url.startsWith(window.location.origin);
+            const token = getAccessToken();
+
+            const nextInit = { ...init };
+            const headers = new Headers(nextInit.headers || ((typeof input !== 'string' && input) ? input.headers : undefined));
+            if (isSameOrigin && token && !headers.has('Authorization')) {
+                headers.set('Authorization', `Bearer ${token}`);
+            }
+            nextInit.headers = headers;
+
+            const response = await nativeFetch(input, nextInit);
+            if (isSameOrigin && response.status === 401) {
+                localStorage.removeItem(ACCESS_TOKEN_KEY);
+                if (window.location.pathname !== '/login') {
+                    window.location.href = '/login';
+                }
+            }
+            return response;
+        };
+
+        window.onload = function () {
+            if (!getAccessToken()) {
+                window.location.href = '/login';
+                return;
+            }
+            initChart();
+            connectWebSocket();
+            fetchHistory().then(() => {
+                fetchConfig();
+                fetchStats();
+            });
+            setInterval(fetchStats, 20000);
+            window.addEventListener('resize', () => { terminal.scrollTop = terminal.scrollHeight; });
+            window.addEventListener('resize', () => {
+                const dd = document.getElementById('data-dropdown');
+                if (dd && dd.classList.contains('show')) positionDataDropdown(dd, dataDropdownTrigger);
+            });
+            window.addEventListener('orientationchange', () => {
+                const dd = document.getElementById('data-dropdown');
+                if (dd && dd.classList.contains('show')) positionDataDropdown(dd, dataDropdownTrigger);
+            });
+            window.onclick = function (event) {
+                if (event.target == settingsModal) closeSettingsModal();
+                if (!event.target.matches('.dropdown') && !event.target.closest('.dropdown')) {
+                    const dd = document.getElementById('data-dropdown');
+                    if (dd) dd.classList.remove('show');
+                }
+            }
+        };
+
+        function initChart() {
+            const ctx = document.getElementById('trainingChart').getContext('2d');
+            const initialDatasets = [
+                {
+                    label: 'Accuracy', borderColor: '#00ff9d', backgroundColor: 'rgba(0, 255, 157, 0.04)',
+                    fill: true, data: [], tension: 0.3, yAxisID: 'y', pointRadius: 0, hoverRadius: 5, borderWidth: 3, order: 0
+                },
+                {
+                    label: 'Loss', borderColor: '#ff3e3e',
+                    data: [], tension: 0.3, yAxisID: 'y1', pointRadius: 0, hoverRadius: 5, borderWidth: 2, order: 0
+                }
+            ];
+
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: { labels: [], datasets: initialDatasets },
+                options: {
+                    maintainAspectRatio: false,
+                    responsive: true,
+                    interaction: { mode: 'nearest', axis: 'xy', intersect: false },
+                    scales: {
+                        y: {
+                            type: 'linear', display: true, position: 'left',
+                            beginAtZero: true, max: 100,
+                            grid: { color: 'rgba(255, 255, 255, 0.03)' },
+                            ticks: { color: '#00ff9d', font: { family: 'Fira Code', size: 9 }, callback: v => v + '%' }
+                        },
+                        y1: {
+                            type: 'linear', display: true, position: 'right',
+                            beginAtZero: false,
+                            grid: { drawOnChartArea: false },
+                            ticks: { color: '#ff3e3e', font: { family: 'Fira Code', size: 9 }, callback: v => v.toFixed(2) }
+                        },
+                        x: {
+                            display: true,
+                            position: 'bottom',
+                            grid: { color: 'rgba(255, 255, 255, 0.03)' },
+                            ticks: { color: '#444', font: { family: 'Fira Code', size: 8 } }
+                        },
+                        x1: {
+                            display: true,
+                            position: 'top',
+                            grid: { drawOnChartArea: false },
+                            ticks: { color: '#444', font: { family: 'Fira Code', size: 8 } }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        zoom: {
+                            pan: { enabled: true, mode: 'x', modifierKey: 'ctrl' },
+                            zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'x' }
+                        },
+                        tooltip: {
+                            enabled: false,
+                            external: function (context) {
+                                const { chart, tooltip } = context;
+                                if (tooltip.opacity === 0) { customTooltip.style.display = 'none'; return; }
+                                const idx = tooltip.dataPoints[0].dataIndex;
+                                const datasetIndex = tooltip.dataPoints[0].datasetIndex;
+                                const activeDataset = chart.data.datasets[datasetIndex];
+                                const runInfo = activeDataset.runInfo || 'LIVE';
+                                const epochLabel = chart.data.labels[idx];
+                                let refAcc = null, refLoss = null;
+                                if (runInfo === 'LIVE' && pastSessions.length > 0) {
+                                    const prevSession = pastSessions[pastSessions.length - 1];
+                                    if (prevSession && prevSession.data.length) {
+                                        const lastPt = prevSession.data[prevSession.data.length - 1];
+                                        refAcc = (lastPt.metrics.accuracy || lastPt.metrics.acc || 0) * 100;
+                                        refLoss = lastPt.metrics.loss;
+                                    }
+                                }
+                                let accVal = null, lossVal = null;
+                                let accColor = '#00ff9d', lossColor = '#ff3e3e';
+                                chart.data.datasets.forEach(ds => {
+                                    if ((ds.runInfo || 'LIVE') === runInfo) {
+                                        const val = ds.data[idx];
+                                        if (ds.label.includes('Accuracy')) { accVal = val.toFixed(1); accColor = toOpaqueColor(ds.borderColor, '#00ff9d'); }
+                                        if (ds.label.includes('Loss')) { lossVal = val.toFixed(3); lossColor = toOpaqueColor(ds.borderColor, '#ff3e3e'); }
+                                    }
+                                });
+                                customTooltip.innerHTML = `<strong>[${runInfo}] EPOCH ${epochLabel}</strong><hr style="border:0; border-bottom:1px solid #333; margin:4px 0">`;
+                                if (accVal) customTooltip.innerHTML += `<div class="tt-row"><span class="tt-label">ACC</span><span class="tt-val" style="color:${accColor}">${accVal}% ${formatDelta(parseFloat(accVal), refAcc)}</span></div>`;
+                                if (lossVal) customTooltip.innerHTML += `<div class="tt-row"><span class="tt-label">LOSS</span><span class="tt-val" style="color:${lossColor}">${lossVal} ${formatDelta(parseFloat(lossVal), refLoss, true)}</span></div>`;
+
+                                // Position tooltip relative to mouse/caret
+                                const position = chart.canvas.getBoundingClientRect();
+                                customTooltip.style.left = (tooltip.caretX + 15) + 'px';
+                                customTooltip.style.top = (tooltip.caretY - 20) + 'px';
+                                customTooltip.style.display = 'block';
+                                customTooltip.style.pointerEvents = 'none'; // Don't block mouse
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function connectWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            ws = new WebSocket(`${protocol}//${window.location.host}/ws/logs`);
+            ws.onopen = () => { statusDiv.innerText = "SYS_ONLINE"; statusDiv.className = "online"; fetchStats(); };
+            ws.onclose = () => { statusDiv.innerText = "SYS_OFFLINE"; statusDiv.className = ""; setTimeout(connectWebSocket, 3000); };
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                if (data.type === 'log') {
+                    log(data.message, data.level);
+                    if (data.message.includes("Training complete")) {
+                        document.getElementById('btn-train').disabled = false;
+                        document.getElementById('btn-train').innerText = "TRAIN 🚀";
+                        fetchStats();
+                    }
+                }
+                else if (data.type === 'epoch_end') {
+                    updateChart(data.epoch, data.metrics.accuracy || data.metrics.acc || 0, data.metrics.loss);
+                }
+                else if (data.type === 'train_start') { prepareForNewTraining(); log(`Optimizer sync: ${data.samples} samples`, "INFO"); }
+                else if (data.type === 'train_result') {
+                    if (data.result && data.result.version) document.getElementById('model-version').innerHTML = formatNeuralVersion(data.result.version);
+                    setTimeout(fetchHistory, 500);
+                }
+            };
+        }
+
+        async function startTraining() {
+            const btn = document.getElementById('btn-train');
+            btn.disabled = true; btn.innerText = "OPTIMIZING...";
+            try {
+                const res = await fetch('/train/start', { method: 'POST' });
+                const data = await res.json();
+                if (data.status !== 'started') { btn.disabled = false; btn.innerText = "TRAIN 🚀"; }
+            } catch (e) { btn.disabled = false; btn.innerText = "TRAIN 🚀"; }
+        }
+
+        function updateChart(epoch, acc, loss) {
+            ensureLabels(epoch);
+            const mainAccDS = chart.data.datasets.find(d => d.label === 'Accuracy' && !d.runInfo);
+            const mainLossDS = chart.data.datasets.find(d => d.label === 'Loss' && !d.runInfo);
+            if (mainAccDS) mainAccDS.data.push(acc * 100);
+            if (mainLossDS) mainLossDS.data.push(loss);
+            chart.update('none');
+            const prevRef = getPreviousTrainingReference(acc, loss);
+            const prevAcc = prevRef ? prevRef.acc : null;
+            const prevLoss = prevRef ? prevRef.loss : null;
+            updateHeaderStats(acc * 100, loss, Number.isFinite(prevAcc) ? prevAcc * 100 : null, prevLoss);
+        }
+
+        function updateHeaderStats(acc, loss, prevAcc, prevLoss) {
+            if (Number.isFinite(prevAcc) && !nearlyEqual(prevAcc, acc, 1e-3)) toolbarDeltaRef.acc = prevAcc;
+            if (Number.isFinite(prevLoss) && !nearlyEqual(prevLoss, loss, 1e-6)) toolbarDeltaRef.loss = prevLoss;
+
+            const accPrevRef = Number.isFinite(prevAcc) ? prevAcc : toolbarDeltaRef.acc;
+            const lossPrevRef = Number.isFinite(prevLoss) ? prevLoss : toolbarDeltaRef.loss;
+            const accText = Number.isFinite(acc) ? `${acc.toFixed(1)}%` : '-';
+            const lossText = Number.isFinite(loss) ? loss.toFixed(4) : '-';
+            document.getElementById('model-acc').innerHTML = accText + formatDelta(acc, accPrevRef);
+            document.getElementById('model-loss').innerHTML = lossText + formatDelta(loss, lossPrevRef, true);
+        }
+
+        function prepareForNewTraining() {
+            const mainAccDS = chart.data.datasets.find(d => d.label === 'Accuracy' && !d.runInfo);
+            const mainLossDS = chart.data.datasets.find(d => d.label === 'Loss' && !d.runInfo);
+            if (mainAccDS) mainAccDS.data = [];
+            if (mainLossDS) mainLossDS.data = [];
+            chart.data.labels = [];
+            document.getElementById('graph-title').innerText = "LIVE_OPTIM";
+            renderAllHistory();
+            chart.update();
+        }
+
+        async function fetchHistory() {
+            try {
+                const response = await fetch('/history');
+                const data = await response.json();
+                terminal.innerHTML = '<div style="color:#222; font-size:9px; border-bottom:1px solid #111; padding-bottom:5px; margin-bottom:10px">--- STREAM_RESTORED ---</div>';
+                if (data.logs) data.logs.slice(-50).forEach(l => log(l.message, l.level));
+                pastSessions = data.past || [];
+                document.getElementById('slider-history').max = pastSessions.length > 10 ? 10 : pastSessions.length;
+                if (data.current && data.current.length > 0) {
+                    prepareForNewTraining();
+                    data.current.forEach(evt => updateChart(evt.epoch, evt.metrics.accuracy || evt.metrics.acc || 0, evt.metrics.loss));
+                } else if (pastSessions.length > 0) {
+                    const last = pastSessions[pastSessions.length - 1];
+                    prepareForNewTraining();
+                    last.data.forEach(evt => updateChart(evt.epoch, evt.metrics.accuracy || evt.metrics.acc || 0, evt.metrics.loss));
+                    document.getElementById('graph-title').innerHTML = `LAST_SYNC <span style="font-size:8px;opacity:0.6">[${last.version}]</span>`;
+                }
+                renderAllHistory();
+            } catch (e) { console.error(e); }
+        }
+
+        function updateHistoryDepth(val) {
+            historyDepth = parseInt(val);
+            document.getElementById('history-val').innerText = historyDepth === 0 ? "OFF" : "N-" + historyDepth;
+            renderAllHistory();
+        }
+
+        function renderAllHistory() {
+            const mainAccDS = chart.data.datasets.find(d => d.label === 'Accuracy' && !d.runInfo);
+            const mainLossDS = chart.data.datasets.find(d => d.label === 'Loss' && !d.runInfo);
+            const currentAccData = mainAccDS ? [...mainAccDS.data] : [];
+            const currentLossData = mainLossDS ? [...mainLossDS.data] : [];
+            const ghostPaletteAcc = ['#9dfff0', '#66ffe2', '#33ffd1', '#00e8be', '#00c9a3'];
+            const ghostPaletteLoss = ['#ffb3b3', '#ff8f8f', '#ff6f6f', '#ff4f4f', '#ff3e3e'];
+            chart.data.datasets = [
+                {
+                    label: 'Accuracy', borderColor: '#00ff9d', backgroundColor: 'rgba(0, 255, 157, 0.04)',
+                    fill: true, data: currentAccData, tension: 0.3, yAxisID: 'y', pointRadius: 0, hoverRadius: 5, borderWidth: 3, order: 5
+                },
+                {
+                    label: 'Loss', borderColor: '#ff3e3e',
+                    data: currentLossData, tension: 0.3, yAxisID: 'y1', pointRadius: 0, hoverRadius: 5, borderWidth: 2, order: 5
+                }
+            ];
+            if (historyDepth > 0 && pastSessions.length > 0) {
+                let maxEpochs = chart.data.labels.length;
+                const count = Math.min(historyDepth, pastSessions.length);
+                const startIndex = pastSessions.length - count;
+                for (let i = startIndex; i < pastSessions.length; i++) {
+                    const session = pastSessions[i];
+                    const offset = pastSessions.length - i;
+                    const colorIdx = Math.min(offset - 1, ghostPaletteAcc.length - 1);
+                    maxEpochs = Math.max(maxEpochs, session.data.length);
+                    ensureLabels(maxEpochs);
+                    chart.data.datasets.push({
+                        label: `Accuracy`, runInfo: `N-${offset}`, borderColor: ghostPaletteAcc[colorIdx],
+                        data: session.data.map(p => (p.metrics.accuracy || p.metrics.acc || 0) * 100),
+                        tension: 0.3, pointRadius: 0, borderDash: [4, 2], borderWidth: 2, yAxisID: 'y', fill: false, order: -10
+                    });
+                    chart.data.datasets.push({
+                        label: `Loss`, runInfo: `N-${offset}`, borderColor: ghostPaletteLoss[colorIdx],
+                        data: session.data.map(p => p.metrics.loss),
+                        tension: 0.3, pointRadius: 0, borderDash: [4, 2], borderWidth: 2, yAxisID: 'y1', fill: false, order: -10
+                    });
+                }
+            }
+            chart.update('none');
+        }
+
+        function ensureLabels(count) {
+            if (chart.data.labels.length < count) {
+                for (let i = chart.data.labels.length + 1; i <= count; i++) {
+                    chart.data.labels.push(i);
+                }
+            }
+        }
+
+        async function fetchStats() {
+            const btn = document.getElementById('btn-refresh');
+            if (btn) { btn.style.transform = "rotate(360deg)"; setTimeout(() => btn.style.transform = "none", 500); }
+            try {
+                const [sR, mR, fR] = await Promise.all([fetch('/stats'), fetch('/model/latest'), fetch('/data/files')]);
+                if (sR.ok) {
+                    const stats = await sR.json();
+                    document.getElementById('stat-files').innerText = stats.data_files_count;
+                    document.getElementById('stat-size').innerText = formatBytes(stats.total_data_size_bytes);
+                }
+                if (fR.ok) {
+                    const files = await fR.json();
+                    renderBjornSources(files);
+                }
+                if (mR.ok) {
+                    const model = await mR.json();
+                    if (model.version) {
+                        document.getElementById('model-version').innerHTML = formatNeuralVersion(model.version);
+                        const modelMetrics = model.metrics || {};
+                        const currentAcc = pickMetric(modelMetrics, ['accuracy', 'acc', 'stability']);
+                        const currentLoss = pickMetric(modelMetrics, ['loss', 'entropy']);
+                        const prevRef = getPreviousTrainingReference(currentAcc, currentLoss);
+                        const prevAcc = prevRef ? prevRef.acc : null;
+                        const prevLoss = prevRef ? prevRef.loss : null;
+                        if (Number.isFinite(currentAcc)) {
+                            updateHeaderStats(currentAcc * 100, Number.isFinite(currentLoss) ? currentLoss : null, Number.isFinite(prevAcc) ? prevAcc * 100 : null, Number.isFinite(prevLoss) ? prevLoss : null);
+                        }
+                    }
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        async function fetchConfig() {
+            try {
+                const res = await fetch('/config');
+                serverConfig = await res.json();
+                autoTrainCheck.checked = serverConfig.auto_train;
+                document.getElementById('setting-interval').value = serverConfig.training_interval_minutes / 60;
+                document.getElementById('interval-val').innerText = serverConfig.training_interval_minutes == 0 ? "Real-time" : (serverConfig.training_interval_minutes / 60) + "h";
+                document.getElementById('setting-tf-data').checked = serverConfig.use_tf_dataset;
+                document.getElementById('setting-epochs').value = serverConfig.default_training_epochs || 50;
+                document.getElementById('setting-batch-size').value = serverConfig.training_batch_size || 32;
+                document.getElementById('setting-learning-rate').value = serverConfig.training_learning_rate || 0.001;
+                startTimer();
+            } catch (e) { console.error(e); }
+        }
+
+        async function toggleAutoTrain() {
+            serverConfig.auto_train = autoTrainCheck.checked;
+            try {
+                await fetch('/config/update', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ auto_train: serverConfig.auto_train })
+                });
+                startTimer();
+            } catch (e) { autoTrainCheck.checked = !autoTrainCheck.checked; }
+        }
+
+        async function toggleDataDropdown(event) {
+            event.stopPropagation();
+            const trigger = event.currentTarget || event.target.closest('.dropdown');
+            const dd = document.getElementById('data-dropdown');
+            if (dd.classList.contains('show')) {
+                dd.classList.remove('show');
+            } else {
+                dataDropdownTrigger = trigger || null;
+                dd.innerHTML = '<div style="padding:10px; color:#666; font-size:10px; text-align:center">LOADING...</div>';
+                dd.classList.add('show');
+                positionDataDropdown(dd, dataDropdownTrigger);
+                const res = await fetch('/data/files'); const files = await res.json(); dd.innerHTML = '';
+                if (files.length === 0) { dd.innerHTML = '<div style="padding:10px; color:#666; font-size:10px; text-align:center">NO DATA</div>'; return; }
+                files.forEach(f => {
+                    const div = document.createElement('div'); div.className = 'dropdown-item';
+                    const date = new Date(f.mtime * 1000).toLocaleDateString();
+                    div.innerHTML = `<div style="display:flex; flex-direction:column"><span style="color:#ddd; font-weight:600">${f.name}</span><span style="color:#666; font-size:9px">${date} - ${(f.size / 1024).toFixed(1)} KB</span></div><span class="btn-del" onclick="deleteFile('${f.name}', event)">x</span>`;
+                    dd.appendChild(div);
+                });
+                positionDataDropdown(dd, dataDropdownTrigger);
+            }
+        }
+
+        async function deleteFile(filename, event) {
+            event.stopPropagation();
+            if (!confirm(`Delete ${filename}?`)) return;
+            await fetch(`/data/files/${filename}`, { method: 'DELETE' });
+            fetchStats(); document.getElementById('data-dropdown').classList.remove('show');
+        }
+
+        function log(msg, level) {
+            const normalizedLevel = String(level || 'INFO').toLowerCase();
+            const div = document.createElement('div'); div.className = `log-line log-${normalizedLevel}`;
+            const ts = new Date().toLocaleTimeString('en-US', { hour12: false });
+            div.innerHTML = `<span class="log-ts">[${ts}]</span><span class="log-msg">${formatLogMessage(msg)}</span>`;
+            terminal.appendChild(div);
+            setTimeout(() => terminal.scrollTop = terminal.scrollHeight, 10);
+        }
+
+        function showToast(msg, isError = false) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div'); toast.className = `toast ${isError ? 'error' : ''}`;
+            toast.innerHTML = isError ? `<span>⚠️</span> ${msg}` : `<span>✨</span> ${msg}`;
+            container.appendChild(toast);
+            setTimeout(() => { toast.classList.add('fade-out'); setTimeout(() => toast.remove(), 400); }, 3000);
+        }
+
+        function formatNeuralVersion(v) {
+            if (!v) return '-';
+            const clean = v.replace(/[^0-9_]/g, '');
+            if (clean.length >= 14) {
+                const parts = clean.split('_');
+                const d = parts[0]; const t = parts[1] || "";
+                v = `${d.slice(0, 4)}-${d.slice(4, 6)}-${d.slice(6, 8)} ${t.slice(0, 2)}:${t.slice(2, 4)}:${t.slice(4, 6)}`;
+            }
+            return `<span class="version-tag">${v}</span>`;
+        }
+
+        function formatBytes(bytes) {
+            if (!+bytes) return '0 B';
+            const k = 1024; const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
+        }
+
+        function formatDelta(current, previous, isLoss = false) {
+            if (!Number.isFinite(current) || !Number.isFinite(previous)) return '';
+            const diff = current - previous;
+            if (Math.abs(diff) < 0.0001) return '';
+            let color = diff > 0 ? (isLoss ? '#ff3e3e' : '#00ff9d') : (isLoss ? '#00ff9d' : '#ff3e3e');
+            const sign = diff > 0 ? '+' : '';
+            return `<span style="color:${color}; font-size:9px; margin-left:6px; font-weight:800">(${sign}${isLoss ? diff.toFixed(3) : diff.toFixed(1) + '%'})</span>`;
+        }
+
+        function extractBjornSuffix(filename) {
+            const parts = String(filename || '').split('_');
+            if (parts.length < 2) return null;
+            const prefix = (parts[0] || '').toUpperCase();
+            return /^[A-Z0-9]{4,12}$/.test(prefix) ? prefix : null;
+        }
+
+        function renderBjornSources(files) {
+            const target = document.getElementById('bjorn-sources');
+            if (!target) return;
+            const set = new Set();
+            (files || []).forEach(f => {
+                const suffix = extractBjornSuffix(f.name);
+                if (suffix) set.add(suffix);
+            });
+            const units = [...set].sort();
+            target.innerHTML = `<img src="/static/icons/bjorn.ico" alt="B"><span>${units.length}</span>`;
+        }
+
+        function pickMetric(source, candidates) {
+            if (!source || typeof source !== 'object') return null;
+            for (const key of candidates) {
+                const value = source[key];
+                if (Number.isFinite(value)) return value;
+            }
+            return null;
+        }
+
+        function nearlyEqual(a, b, epsilon = 1e-6) {
+            if (!Number.isFinite(a) || !Number.isFinite(b)) return false;
+            return Math.abs(a - b) <= epsilon;
+        }
+
+        function getSessionTailMetrics(session) {
+            const data = session && Array.isArray(session.data) ? session.data : [];
+            if (data.length === 0) return null;
+            const tail = data[data.length - 1];
+            const metrics = tail && tail.metrics ? tail.metrics : {};
+            const acc = pickMetric(metrics, ['accuracy', 'acc', 'stability']);
+            const loss = pickMetric(metrics, ['loss', 'entropy']);
+            if (!Number.isFinite(acc)) return null;
+            return { acc, loss: Number.isFinite(loss) ? loss : null };
+        }
+
+        function getPreviousTrainingReference(currentAcc, currentLoss) {
+            if (!Array.isArray(pastSessions) || pastSessions.length === 0) return null;
+            for (let i = pastSessions.length - 1; i >= 0; i--) {
+                const ref = getSessionTailMetrics(pastSessions[i]);
+                if (!ref) continue;
+                const sameAcc = nearlyEqual(ref.acc, currentAcc, 1e-6);
+                const sameLoss = (!Number.isFinite(currentLoss) && !Number.isFinite(ref.loss)) ||
+                    nearlyEqual(ref.loss, currentLoss, 1e-6);
+                if (!(sameAcc && sameLoss)) return ref;
+            }
+            return null;
+        }
+
+        function escapeHtml(value) {
+            return String(value)
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#39;');
+        }
+
+        function formatLogMessage(msg) {
+            const escaped = escapeHtml(msg);
+            return escaped.replace(/(^|[^A-Za-z])(-?\d+(?:\.\d+)?%?)/g, (full, prefix, num) => `${prefix}<span class="log-num">${num}</span>`);
+        }
+
+        function toOpaqueColor(color, fallback) {
+            if (!color || typeof color !== 'string') return fallback;
+            const rgbaMatch = color.match(/rgba\((\d+),\s*(\d+),\s*(\d+),\s*[\d.]+\)/i);
+            if (rgbaMatch) {
+                return `rgb(${rgbaMatch[1]}, ${rgbaMatch[2]}, ${rgbaMatch[3]})`;
+            }
+            return color;
+        }
+
+        function positionDataDropdown(dd, trigger) {
+            if (!dd || !trigger) return;
+            const margin = 8;
+            const triggerRect = trigger.getBoundingClientRect();
+            const viewportW = window.innerWidth;
+            const viewportH = window.innerHeight;
+
+            const ddRect = dd.getBoundingClientRect();
+            const width = Math.min(ddRect.width || 250, viewportW - margin * 2);
+            const height = ddRect.height || 180;
+
+            let left = triggerRect.left;
+            if (left + width > viewportW - margin) left = viewportW - margin - width;
+            if (left < margin) left = margin;
+
+            let top = triggerRect.bottom + 8;
+            if (top + height > viewportH - margin) top = Math.max(margin, triggerRect.top - height - 8);
+
+            dd.style.left = `${left}px`;
+            dd.style.top = `${top}px`;
+        }
+
+        function startTimer() {
+            clearInterval(timerInterval);
+            const timerDisplay = document.getElementById('next-training-timer');
+            if (!serverConfig.auto_train || !serverConfig.next_training_time) { timerDisplay.innerText = "PAUSED"; return; }
+            if (serverConfig.training_interval_minutes === 0) { timerDisplay.innerHTML = "LIVE_DATA"; return; }
+            function update() {
+                const diff = new Date(serverConfig.next_training_time).getTime() - new Date().getTime();
+                if (diff < 0) { timerDisplay.innerText = "PENDING..."; return; }
+                const h = Math.floor(diff / 3600000);
+                const m = Math.floor((diff % 3600000) / 60000);
+                const s = Math.floor((diff % 60000) / 1000);
+                timerDisplay.innerText = `${h < 10 ? '0' + h : h}:${m < 10 ? '0' + m : m}:${s < 10 ? '0' + s : s}`;
+            }
+            update(); timerInterval = setInterval(update, 1000);
+        }
+
+        function openSettingsModal() { settingsModal.style.display = "flex"; }
+        function closeSettingsModal() { settingsModal.style.display = "none"; }
+        function updateRangeVal(input, displayId) { document.getElementById(displayId).innerText = input.value == 0 ? "Real-time" : input.value + "h"; }
+        async function saveSettings() {
+            const interval = document.getElementById('setting-interval').value;
+            const useTf = document.getElementById('setting-tf-data').checked;
+            const epochs = parseInt(document.getElementById('setting-epochs').value || "50", 10);
+            const batchSize = parseInt(document.getElementById('setting-batch-size').value || "32", 10);
+            const learningRate = parseFloat(document.getElementById('setting-learning-rate').value || "0.001");
+            const res = await fetch('/config/update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    training_interval_minutes: interval * 60,
+                    use_tf_dataset: useTf,
+                    default_training_epochs: Math.max(1, epochs),
+                    training_batch_size: Math.max(1, batchSize),
+                    training_learning_rate: Math.max(0.000001, learningRate)
+                })
+            });
+            serverConfig = await res.json(); closeSettingsModal(); startTimer();
+        }
+    </script>
+</body>
+
+</html>
+
+
+

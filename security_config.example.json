@@ -1,0 +1,8 @@
+{
+  "secret_key": "CHANGE_ME_STRONG_RANDOM_SECRET",
+  "algorithm": "HS256",
+  "access_token_expire_minutes": 1440,
+  "admin_password_hash": "CHANGE_ME_BCRYPT_HASH",
+  "totp_secret": "CHANGE_ME_BASE32_SECRET",
+  "totp_setup_complete": false
+}
