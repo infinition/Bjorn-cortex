@@ -1,125 +1,102 @@
-﻿<div align="center">
-  <img src="https://github.com/user-attachments/assets/2d2ed3e7-e159-42a5-9e99-22074c10581b"
-       alt="icon"
-       width="140"
-       height="125" />
+<div align="center">
+  <img src="https://github.com/user-attachments/assets/2d2ed3e7-e159-42a5-9e99-22074c10581b" alt="Bjorn Cortex" width="140" height="125" />
 </div>
-
 
 # Bjorn Cortex
-Neural command center for Bjorn units.
 
-## Vision
-Bjorn Cortex is the brain of a Swarm AI: each Bjorn explores its environment, learns from real missions, and sends anonymized feedback to the Cortex.
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) ![Python](https://img.shields.io/badge/Python-3776AB?style=flat&logo=python&logoColor=white) ![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat&logo=docker&logoColor=white) [![Release](https://img.shields.io/github/v/release/infinition/Bjorn-cortex?style=flat)](https://github.com/infinition/Bjorn-cortex/releases) [![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-ffdd00?style=flat&logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/infinition)
 
-The Cortex aggregates this collective field experience to continuously improve navigation, recognition, and exploitation strategies, then redistributes a stronger model to the whole fleet.
+A centralized training server for the Bjorn swarm. Each Bjorn device explores its environment and sends anonymized feedback to the Cortex. The Cortex aggregates field experience across the fleet, trains a model, and redistributes it to all connected devices.
 
-Goal: build an ultra-efficient, community-driven AI brain for makers, tinkerers, and ethical hackers working in authorized and defensive security contexts.
+The current version targets local experimentation and iterative testing. Production deployment on a VPS is a future milestone.
 
-Roadmap note: Bjorn Cortex is designed to be deployed on a VPS in future production-oriented versions. Local server and local AI model usage may also be integrated directly into future Bjorn releases. The current GitHub version is primarily intended for local experimentation, validation, and iterative testing.
+---
 
-This service receives anonymized training data from clients, trains a model, and serves the latest model to connected Bjorn devices.
-<div align="center">
+## How it works
 
-<img width="896" height="965" alt="image" src="https://github.com/user-attachments/assets/b49609e8-dfcf-4bfe-986c-c681da06fbdd" />
-</div>
+1. Bjorn devices send anonymized `.csv.gz` training files to the Cortex upload endpoint.
+2. The Cortex trains a TensorFlow/Keras model on the aggregated data.
+3. The latest model is served back to connected devices on request.
+4. Live training status is streamed via WebSocket.
+
+---
 
 ## Features
+
 - FastAPI backend and dashboard UI.
-- Upload endpoint for `.csv.gz` training files.
+- Upload endpoint for `.csv.gz` training data.
 - Training pipeline with TensorFlow/Keras.
 - Live status via WebSocket.
-- JWT authentication + MFA (TOTP).
+- JWT authentication with MFA (TOTP).
+
+---
 
 ## Requirements
-- Python 3.10+ (3.8+ may work depending on TensorFlow build).
-- Linux, Windows, or macOS.
 
-Install dependencies:
-
-```bash
-pip install fastapi uvicorn python-multipart jinja2 websockets tensorflow pandas numpy scikit-learn pyotp qrcode python-jose[cryptography] passlib[bcrypt] slowapi
-```
-
-## Run (local)
-From this folder:
+- Python 3.10+
+- TensorFlow-compatible environment (GPU optional)
 
 ```bash
-uvicorn server:app --host 0.0.0.0 --port 8000 --reload
+pip install -r Cortex/requirements.txt
 ```
 
-Before first run, create local configs:
+---
+
+## Running
 
 ```bash
-cp security_config.example.json security_config.json
-cp server_config.example.json server_config.json
+cd Cortex
+python server.py
 ```
 
-Base URL:
-- `http://localhost:8000`
+Access the dashboard on `http://localhost:8000`.
 
-## First Login / Setup Flow
-1. Open `http://localhost:8000/setup`.
-2. Scan TOTP QR code with your authenticator app.
-3. Open `http://localhost:8000/login`.
-4. Authenticate (password + TOTP).
-5. Access dashboard on `http://localhost:8000/`.
+---
 
 ## Docker
-From this folder:
 
 ```bash
 docker compose up -d --build
 ```
 
-## Security Before GitHub Push
-This project uses local JSON configs (`security_config.json`, `server_config.json`) that can contain secrets.
+---
 
-These files are ignored by `.gitignore`.
+## Security
 
-Recommended publish flow:
-1. Keep real local configs untracked.
-2. Commit only sanitized examples (`security_config.example.json`, `server_config.example.json`).
-3. Rotate any secret previously exposed (JWT secret, TOTP secret, API keys, admin password hash).
+Local configs (`security_config.json`, `server_config.json`) can contain secrets and are git-ignored. Commit only the sanitized `.example` variants. Rotate any secret previously exposed before pushing.
 
-## Runtime Data
-The following are generated at runtime and are ignored:
-- `data/*.csv.gz`
-- `models/*`
-- `training_history.json`
-- `__pycache__/`
+Do not expose this service publicly without HTTPS and a reverse proxy.
 
-## Project Layout
-```text
-bjorn_ai_server/
-|-- data/                  # uploaded training files (runtime)
-|-- models/                # trained models (runtime)
-|-- templates/             # HTML templates
-|-- server.py              # FastAPI app
-|-- trainer.py             # training logic
-|-- Dockerfile
-|-- docker-compose.yml
-|-- .gitignore
-`-- README.md
-```
+---
 
-## Core Endpoints
-- `GET /setup` initial setup page
-- `GET /setup/qr` TOTP provisioning QR
-- `GET /setup/secret` raw TOTP secret
-- `GET /login` login page
-- `POST /token` issues JWT token (OAuth2 password flow)
-- `GET /` dashboard
-- `GET /history` activity and training history
-- `GET /config` read runtime config
-- `POST /config/update` update runtime config
-- `POST /upload` upload training data (`.csv.gz`)
-- `POST /train/start` trigger training
-- `GET /model/latest` latest model metadata
-- `GET /model/download/{filename}` model artifact download
-- `GET /stats` server stats
-- `WS /ws/logs` realtime logs/training events
+## API endpoints
 
-## Notes
-- For internet exposure, place the app behind a reverse proxy with HTTPS.
-- Do not deploy with default secrets.
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/setup` | Initial setup page |
+| GET | `/setup/qr` | TOTP provisioning QR |
+| POST | `/token` | Issue JWT (OAuth2 password flow) |
+| GET | `/` | Dashboard |
+| POST | `/upload` | Upload training data |
+| POST | `/train/start` | Trigger training |
+| GET | `/model/latest` | Latest model metadata |
+| GET | `/model/download/{filename}` | Download model artifact |
+| WS | `/ws/logs` | Real-time training events |
+
+---
+
+## Star History
+
+<a href="https://www.star-history.com/?repos=infinition%2FBjorn-cortex&type=date&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=infinition/Bjorn-cortex&type=date&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=infinition/Bjorn-cortex&type=date&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=infinition/Bjorn-cortex&type=date&legend=top-left" />
+ </picture>
+</a>
+
+---
+
+## License
+
+MIT.
